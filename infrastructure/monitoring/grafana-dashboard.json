@@ -1,0 +1,141 @@
+{
+  "dashboard": {
+    "title": "Cummins OS Production Dashboard",
+    "tags": ["cummins-os", "production"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service='api'}[5m])",
+            "legendFormat": "{{ method }} {{ status }}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "API Latency (p95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, http_request_duration_seconds{service='api'})",
+            "legendFormat": "p95"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~'5..'}[5m])) / sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Error Rate"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_activity_count",
+            "legendFormat": "{{ state }}"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Query Execution Time",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(pg_stat_statements_mean_exec_time_milliseconds_bucket[5m]))",
+            "legendFormat": "p99"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Redis Memory Usage",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "(redis_memory_used_bytes / redis_memory_max_bytes) * 100",
+            "legendFormat": "Memory Usage %"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Kafka Consumer Lag",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag_sum by (topic, consumer_group)",
+            "legendFormat": "{{ topic }}/{{ consumer_group }}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Telemetry Ingestion Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(telemetry_ingestion_total[5m])",
+            "legendFormat": "events/sec"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "ML Service Prediction Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Node CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "1 - avg(rate(node_cpu_seconds_total{mode='idle'}[5m])) by (instance)",
+            "legendFormat": "{{ instance }}"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Node Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+            "legendFormat": "{{ instance }}"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Pod Restart Count",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(kube_pod_container_status_restarts_total[1h])) by (pod)",
+            "legendFormat": "{{ pod }}"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,221 @@
+groups:
+  - name: cummins-os
+    interval: 30s
+    rules:
+      # API Service Alerts
+      - alert: APIHighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) /
+           sum(rate(http_requests_total[5m])) by (service)) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is above 5% for the last 5 minutes"
+
+      - alert: APIHighLatency
+        expr: |
+          histogram_quantile(0.95, http_request_duration_seconds{service="api"}) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High API latency"
+          description: "API p95 latency is above 1 second"
+
+      - alert: APIDown
+        expr: |
+          up{job="api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "API service is down"
+          description: "API service has been unavailable for more than 2 minutes"
+
+      # Database Alerts
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          pg_stat_activity_count{state="active"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database connection pool exhaustion"
+          description: "PostgreSQL active connections are above 80"
+
+      - alert: DatabaseSlowQueries
+        expr: |
+          rate(pg_slow_queries_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High number of slow database queries"
+          description: "Slow query rate is above 10 per second"
+
+      - alert: DatabaseDiskSpaceRunningOut
+        expr: |
+          (pg_disk_bytes_used / pg_disk_bytes_total) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database disk space running out"
+          description: "PostgreSQL disk usage is above 85%"
+
+      # Cache Alerts
+      - alert: RedisHighMemoryUsage
+        expr: |
+          (redis_memory_used_bytes / redis_memory_max_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 90%"
+
+      - alert: RedisDown
+        expr: |
+          up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been unavailable for more than 2 minutes"
+
+      # Kafka Alerts
+      - alert: KafkaConsumerLag
+        expr: |
+          kafka_consumer_lag_sum > 100000
+        for: 10m
+        labels:
+          severity: warning
+          service: messaging
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Kafka consumer lag is above 100,000 messages"
+
+      - alert: KafkaProducerErrors
+        expr: |
+          rate(kafka_producer_errors_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: messaging
+        annotations:
+          summary: "High Kafka producer error rate"
+          description: "Kafka producer errors are above 100 per second"
+
+      # ML Service Alerts
+      - alert: MLServiceHighLatency
+        expr: |
+          histogram_quantile(0.95, ml_prediction_duration_seconds) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: ml
+        annotations:
+          summary: "ML Service predictions are slow"
+          description: "ML prediction p95 latency is above 2 seconds"
+
+      - alert: MLServiceDown
+        expr: |
+          up{job="ml-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: ml
+        annotations:
+          summary: "ML Service is down"
+          description: "ML Service has been unavailable for more than 2 minutes"
+
+      # Telemetry Processing Alerts
+      - alert: TelemetryProcessingBacklog
+        expr: |
+          kafka_topic_partition_lag_sum{topic="cummins.telemetry.raw"} > 1000000
+        for: 10m
+        labels:
+          severity: warning
+          service: telemetry
+        annotations:
+          summary: "Telemetry processing backlog"
+          description: "Telemetry processing lag is above 1M messages"
+
+      - alert: TelemetryIngestionDrops
+        expr: |
+          rate(telemetry_ingestion_dropped_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: critical
+          service: telemetry
+        annotations:
+          summary: "Telemetry packets being dropped"
+          description: "Telemetry drop rate is above 100 per second"
+
+      # Infrastructure Alerts
+      - alert: HighCPUUsage
+        expr: |
+          (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance)) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 90% on {{ $labels.instance }}"
+
+      - alert: DiskSpaceRunningOut
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Disk space running out"
+          description: "Available disk space is below 10% on {{ $labels.instance }}"
+
+      # Kubernetes Alerts
+      - alert: PodCrashLooping
+        expr: |
+          rate(kube_pod_container_status_restarts_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: kubernetes
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is crash looping"
+
+      - alert: NodeNotReady
+        expr: |
+          kube_node_status_condition{condition="Ready",status="true"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: kubernetes
+        annotations:
+          summary: "Node is not ready"
+          description: "Node {{ $labels.node }} is not ready"
