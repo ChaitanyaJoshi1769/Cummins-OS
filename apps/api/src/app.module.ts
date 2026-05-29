@@ -7,6 +7,16 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { RolesModule } from './modules/roles/roles.module';
+// Phase 3-12 modules
+import { FleetModule } from './modules/fleet/fleet.module';
+import { TelemetryModule } from './modules/telemetry/telemetry.module';
+import { DiagnosticsModule } from './modules/diagnostics/diagnostics.module';
+import { MaintenanceModule } from './modules/maintenance/maintenance.module';
+import { ElectrificationModule } from './modules/electrification/electrification.module';
+import { HydrogenModule } from './modules/hydrogen/hydrogen.module';
+import { SafetyModule } from './modules/safety/safety.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { FleetOpsModule } from './modules/fleet-ops/fleet-ops.module';
 
 @Module({
   imports: [
@@ -27,11 +37,21 @@ import { RolesModule } from './modules/roles/roles.module';
       migrations: [__dirname + '/database/migrations/*.{js,ts}'],
       migrationsRun: true,
     }),
-    // Feature modules
+    // Feature modules - Phases 1-2
     AuthModule,
     UsersModule,
     OrganizationsModule,
     RolesModule,
+    // Feature modules - Phases 3-12
+    FleetModule,
+    TelemetryModule,
+    DiagnosticsModule,
+    MaintenanceModule,
+    ElectrificationModule,
+    HydrogenModule,
+    SafetyModule,
+    IntegrationsModule,
+    FleetOpsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
