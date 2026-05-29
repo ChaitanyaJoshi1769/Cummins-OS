@@ -1,0 +1,35 @@
+{
+  "version": "1",
+  "extends": ["//"],
+  "globalDependencies": ["**/.env.local"],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "outputs": ["dist/**", ".next/**", "build/**"],
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "next.config.js"]
+    },
+    "test": {
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "tests/**", "jest.config.js"]
+    },
+    "test:coverage": {
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "tests/**"]
+    },
+    "lint": {
+      "cache": false,
+      "inputs": ["src/**", ".eslintrc.js"]
+    },
+    "type-check": {
+      "cache": true,
+      "inputs": ["src/**", "tsconfig.json"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}
